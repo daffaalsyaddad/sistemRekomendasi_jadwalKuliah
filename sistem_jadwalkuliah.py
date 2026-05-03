@@ -33,7 +33,6 @@ slot_waktu = [
 
 ruangan = ["103", "303", "309", "301-A", "301-B", "PUSKOM"]
 
-
 prioritas_ruangan = {
     "PUSKOM": 5,
     "301-A": 4,
@@ -42,8 +41,6 @@ prioritas_ruangan = {
     "303": 2,
     "103": 1
 }
-
-
 
 dosen_mk = {
     "Rahmad Kurniawan": ["Sistem Cerdas"],
@@ -57,27 +54,20 @@ dosen_mk = {
     "Fatayat": ["Evaluasi Antarmuka Pengguna"]
 }
 
-
-
 def hitung_score(waktu, ruang, preferensi_jam):
     hari, jam_range = waktu.split(" ")
     start = float(jam_range.split("-")[0].replace(".", ""))
     pref = float(preferensi_jam.replace(".", ""))
 
-    
     selisih = abs(start - pref)
     skor_jam = max(0, 10 - (selisih / 100))
 
-    
     jumlah = sum(1 for j in jadwal_existing if j["waktu"].startswith(hari))
     penalti = jumlah * 0.8
 
-    
     skor_ruang = prioritas_ruangan.get(ruang, 1)
 
     return skor_jam - penalti + skor_ruang
-
-
 
 def cocok_slot(preferensi_jam):
     hasil = []
@@ -89,8 +79,6 @@ def cocok_slot(preferensi_jam):
             hasil.append(s)
 
     return hasil if hasil else slot_waktu
-
-
 
 from collections import defaultdict
 
@@ -117,7 +105,6 @@ def rekomendasi_jadwal(nama_dosen, preferensi_jam):
 
     rekomendasi = sorted(rekomendasi, key=lambda x: x["Score"], reverse=True)
 
-
     group = defaultdict(list)
     for r in rekomendasi:
         group[r["Waktu"]].append(r)
@@ -128,46 +115,3 @@ def rekomendasi_jadwal(nama_dosen, preferensi_jam):
         hasil.append(terbaik)
 
     return sorted(hasil, key=lambda x: x["Score"], reverse=True)
-
-
-
-daftar_dosen = list(dosen_mk.keys())
-
-print("=== DAFTAR DOSEN ===")
-for i, d in enumerate(daftar_dosen, 1):
-    print(f"{i}. {d}")
-
-pilih = int(input("\nPilih nomor dosen: "))
-nama_dosen = daftar_dosen[pilih - 1]
-
-print(f"\nDosen: {nama_dosen}")
-
-mk_list = dosen_mk[nama_dosen]
-
-print("\nMata kuliah:")
-for i, mk in enumerate(mk_list, 1):
-    print(f"{i}. {mk}")
-
-pilih_mk = int(input("\nPilih nomor mata kuliah: "))
-mk_input = mk_list[pilih_mk - 1]
-
-preferensi_jam = input("\nMasukkan jam preferensi (contoh 09.00): ")
-
-
-
-hasil = rekomendasi_jadwal(nama_dosen, preferensi_jam)
-
-print("\n=== TOP 5 REKOMENDASI ===\n")
-for i, r in enumerate(hasil[:5], 1):
-    print(f"{i}. {r['Waktu']} | {r['Ruangan']} | Score: {round(r['Score'],2)}")
-
-print("\n=== ALTERNATIF LAINNYA ===\n")
-for i, r in enumerate(hasil[5:], 6):
-    print(f"{i}. {r['Waktu']} | {r['Ruangan']} | Score: {round(r['Score'],2)}")
-
-
-
-import pandas as pd
-
-df = pd.DataFrame(hasil)
-df.to_excel("rekomendasi_jadwal.xlsx", index=False)
