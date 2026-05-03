@@ -1,114 +1,117 @@
-import streamlit as st
-import pandas as pd
+jadwal_existing = [
+    {"mk": "Rekayasa Proses Bisnis", "dosen": "Yanti Andriyani", "waktu": "Senin 07.30-10.00", "ruang": "303"},
+    {"mk": "Pengembangan Sistem Informasi Berbasis Web", "dosen": "Zaiful Bahri", "waktu": "Senin 07.30-10.00", "ruang": "PUSKOM"},
+    {"mk": "Sistem Cerdas", "dosen": "Rahmad Kurniawan", "waktu": "Senin 10.10-12.40", "ruang": "301-A"},
+    {"mk": "Komputasi Awan", "dosen": "Al Aminuddin", "waktu": "Senin 10.10-12.40", "ruang": "309"},
+    {"mk": "Evaluasi Antarmuka Pengguna", "dosen": "Lina Purwanti", "waktu": "Senin 13.00-15.30", "ruang": "301-A"},
+    {"mk": "Pemrograman Bahasa Alami", "dosen": "Tisha Melia", "waktu": "Senin 13.00-15.30", "ruang": "301-B"},
+    {"mk": "Komputasi Awan", "dosen": "Al Aminuddin", "waktu": "Selasa 13.00-15.30", "ruang": "301-A"},
+    {"mk": "Sistem Informasi Geografis", "dosen": "Gita Sastria", "waktu": "Selasa 13.00-15.30", "ruang": "309"},
+    {"mk": "Pengembangan Sistem Informasi Berbasis Web", "dosen": "Zaiful Bahri", "waktu": "Selasa 13.00-15.30", "ruang": "PUSKOM"},
+    {"mk": "Rekayasa Proses Bisnis", "dosen": "Yanti Andriyani", "waktu": "Rabu 07.30-10.00", "ruang": "309"},
+    {"mk": "Pengembangan Sistem Informasi Berbasis Web", "dosen": "Zaiful Bahri", "waktu": "Rabu 09.30-12.00", "ruang": "PUSKOM"},
+    {"mk": "Sistem Informasi Geografis", "dosen": "Teguh Sujana", "waktu": "Rabu 10.10-12.40", "ruang": "303"},
+    {"mk": "Keamanan Sistem Informasi", "dosen": "Elfizar", "waktu": "Rabu 10.10-12.40", "ruang": "301-B"},
+    {"mk": "Sistem Cerdas", "dosen": "Ibnu Daqiqil Id.", "waktu": "Rabu 13.00-15.30", "ruang": "301-A"},
+    {"mk": "Keamanan Sistem Informasi", "dosen": "Elfizar", "waktu": "Rabu 13.00-15.30", "ruang": "309"},
+    {"mk": "Keamanan Sistem Informasi", "dosen": "Elfizar", "waktu": "Kamis 07.30-10.00", "ruang": "303"},
+    {"mk": "Rekayasa Proses Bisnis", "dosen": "Yanti Andriyani", "waktu": "Kamis 07.30-10.00", "ruang": "309"},
+    {"mk": "Pemrograman Bahasa Alami", "dosen": "Tisha Melia", "waktu": "Kamis 10.10-12.40", "ruang": "309"},
+    {"mk": "Sistem Cerdas", "dosen": "Ibnu Daqiqil Id.", "waktu": "Kamis 13.00-15.30", "ruang": "301-A"},
+    {"mk": "Komputasi Awan", "dosen": "Al Aminuddin", "waktu": "Kamis 13.00-15.30", "ruang": "309"},
+    {"mk": "Evaluasi Antarmuka Pengguna", "dosen": "Fatayat", "waktu": "Jumat 07.30-10.00", "ruang": "301-A"},
+    {"mk": "Sistem Informasi Geografis", "dosen": "Teguh Sujana", "waktu": "Jumat 09.20-11.50", "ruang": "303"}
+]
 
-from sistem_jadwalkuliah import rekomendasi_jadwal, dosen_mk
+slot_waktu = [
+    "Senin 07.30-10.00", "Senin 10.10-12.40", "Senin 13.00-15.30",
+    "Selasa 13.00-15.30",
+    "Rabu 07.30-10.00", "Rabu 09.30-12.00", "Rabu 10.10-12.40", "Rabu 13.00-15.30",
+    "Kamis 07.30-10.00", "Kamis 10.10-12.40", "Kamis 13.00-15.30",
+    "Jumat 07.30-10.00", "Jumat 09.20-11.50"
+]
 
-st.set_page_config(
-    page_title="Sistem Rekomendasi Jadwal Kuliah",
-    layout="centered"
-)
+ruangan = ["103", "303", "309", "301-A", "301-B", "PUSKOM"]
 
-# ======================
-# CSS (ADAPTIF DEFAULT STREAMLIT)
-# ======================
-st.markdown("""
-<style>
-
-.title {
-    text-align: center;
-    font-size: 32px;
-    font-weight: 700;
-    margin-bottom: 5px;
+prioritas_ruangan = {
+    "PUSKOM": 5,
+    "301-A": 4,
+    "301-B": 3,
+    "309": 2,
+    "303": 2,
+    "103": 1
 }
 
-.subtitle {
-    text-align: center;
-    opacity: 0.7;
-    margin-bottom: 25px;
+dosen_mk = {
+    "Rahmad Kurniawan": ["Sistem Cerdas"],
+    "Ibnu Daqiqil Id.": ["Sistem Cerdas"],
+    "Yanti Andriyani": ["Rekayasa Proses Bisnis"],
+    "Zaiful Bahri": ["Pengembangan Sistem Informasi Berbasis Web"],
+    "Al Aminuddin": ["Komputasi Awan"],
+    "Tisha Melia": ["Pemrograman Bahasa Alami"],
+    "Elfizar": ["Keamanan Sistem Informasi"],
+    "Teguh Sujana": ["Sistem Informasi Geografis"],
+    "Fatayat": ["Evaluasi Antarmuka Pengguna"]
 }
 
-.card {
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid rgba(128,128,128,0.2);
-    margin-bottom: 20px;
-}
+def hitung_score(waktu, ruang, preferensi_jam):
+    hari, jam_range = waktu.split(" ")
+    start = float(jam_range.split("-")[0].replace(".", ""))
+    pref = float(preferensi_jam.replace(".", ""))
 
-.stButton>button {
-    border-radius: 8px;
-    height: 45px;
-    width: 100%;
-    font-weight: 600;
-}
+    selisih = abs(start - pref)
+    skor_jam = max(0, 10 - (selisih / 100))
 
-.stTextInput>div>div>input {
-    border-radius: 8px;
-}
+    jumlah = sum(1 for j in jadwal_existing if j["waktu"].startswith(hari))
+    penalti = jumlah * 0.8
 
-.stSelectbox>div>div {
-    border-radius: 8px;
-}
+    skor_ruang = prioritas_ruangan.get(ruang, 1)
 
-</style>
-""", unsafe_allow_html=True)
+    return skor_jam - penalti + skor_ruang
 
-# ======================
-# HEADER
-# ======================
-st.markdown('<div class="title">Sistem Rekomendasi Jadwal Kuliah</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Rekomendasi jadwal berdasarkan preferensi dosen dan constraint penjadwalan</div>', unsafe_allow_html=True)
+def cocok_slot(preferensi_jam):
+    hasil = []
+    pref = float(preferensi_jam.replace(".", ""))
 
-# ======================
-# SESSION STATE (BIAR HASIL TIDAK HILANG)
-# ======================
-if "hasil" not in st.session_state:
-    st.session_state.hasil = None
+    for s in slot_waktu:
+        start = float(s.split(" ")[1].split("-")[0].replace(".", ""))
+        if abs(start - pref) <= 400:
+            hasil.append(s)
 
-# ======================
-# INPUT
-# ======================
-st.markdown('<div class="card">', unsafe_allow_html=True)
+    return hasil if hasil else slot_waktu
 
-st.subheader("Input Data")
+from collections import defaultdict
 
-nama_dosen = st.selectbox("Dosen", list(dosen_mk.keys()))
-mk = st.selectbox("Mata Kuliah", dosen_mk[nama_dosen])
-preferensi_jam = st.text_input("Preferensi Jam (contoh: 09.00)")
+def rekomendasi_jadwal(nama_dosen, preferensi_jam):
+    rekomendasi = []
+    kandidat = cocok_slot(preferensi_jam)
 
-if st.button("Generate Rekomendasi"):
-    if preferensi_jam.strip() == "":
-        st.warning("Masukkan jam terlebih dahulu")
-    else:
-        st.session_state.hasil = rekomendasi_jadwal(nama_dosen, preferensi_jam)
+    for waktu in kandidat:
+        for ruang in ruangan:
+            bentrok = False
 
-st.markdown('</div>', unsafe_allow_html=True)
+            for j in jadwal_existing:
+                if j["waktu"] == waktu and j["ruang"] == ruang:
+                    bentrok = True
+                if j["waktu"] == waktu and j["dosen"] == nama_dosen:
+                    bentrok = True
 
-# ======================
-# OUTPUT
-# ======================
-if st.session_state.hasil is not None:
+            if not bentrok:
+                rekomendasi.append({
+                    "Waktu": waktu,
+                    "Ruangan": ruang,
+                    "Score": hitung_score(waktu, ruang, preferensi_jam)
+                })
 
-    df = pd.DataFrame(st.session_state.hasil)
-    df["Score"] = df["Score"].round(2)
+    rekomendasi = sorted(rekomendasi, key=lambda x: x["Score"], reverse=True)
 
-    # TOP
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("Rekomendasi Utama")
-    st.dataframe(df.head(5), use_container_width=True, hide_index=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    group = defaultdict(list)
+    for r in rekomendasi:
+        group[r["Waktu"]].append(r)
 
-    # ALT
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("Alternatif Jadwal")
-    st.dataframe(df.iloc[5:], use_container_width=True, hide_index=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    hasil = []
+    for waktu, items in group.items():
+        terbaik = sorted(items, key=lambda x: x["Score"], reverse=True)[0]
+        hasil.append(terbaik)
 
-    # DOWNLOAD
-    csv = df.to_csv(index=False)
-
-    st.download_button(
-        "Download Hasil",
-        csv,
-        "rekomendasi_jadwal.csv",
-        "text/csv"
-    )
+    return sorted(hasil, key=lambda x: x["Score"], reverse=True)
