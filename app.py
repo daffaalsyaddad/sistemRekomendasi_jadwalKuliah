@@ -15,7 +15,7 @@ except Exception as e:
 # CONFIG
 # ======================
 st.set_page_config(
-    page_title="Sistem Rekomendasi Jadwal Kuliah",
+    page_title="Sistem Rekomendasi Jadwal Kuliah Sistem Informasi Semester 4",
     layout="centered"
 )
 
@@ -66,6 +66,7 @@ st.markdown("""
 # ======================
 st.markdown('<div class="title">Sistem Rekomendasi Jadwal Kuliah</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Rekomendasi jadwal berdasarkan preferensi dosen dan constraint penjadwalan</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Kelompok 2 - Sistem Cerdas</div>', unsafe_allow_html=True)
 
 # ======================
 # SESSION STATE
