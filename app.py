@@ -14,7 +14,6 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* Title */
 .title {
     text-align: center;
     font-size: 32px;
@@ -22,14 +21,12 @@ st.markdown("""
     margin-bottom: 5px;
 }
 
-/* Subtitle */
 .subtitle {
     text-align: center;
     opacity: 0.7;
     margin-bottom: 25px;
 }
 
-/* Card container */
 .card {
     padding: 20px;
     border-radius: 12px;
@@ -37,7 +34,6 @@ st.markdown("""
     margin-bottom: 20px;
 }
 
-/* Button */
 .stButton>button {
     border-radius: 8px;
     height: 45px;
@@ -45,7 +41,6 @@ st.markdown("""
     font-weight: 600;
 }
 
-/* Input */
 .stTextInput>div>div>input {
     border-radius: 8px;
 }
@@ -64,6 +59,12 @@ st.markdown('<div class="title">Sistem Rekomendasi Jadwal Kuliah</div>', unsafe_
 st.markdown('<div class="subtitle">Rekomendasi jadwal berdasarkan preferensi dosen dan constraint penjadwalan</div>', unsafe_allow_html=True)
 
 # ======================
+# SESSION STATE (BIAR HASIL TIDAK HILANG)
+# ======================
+if "hasil" not in st.session_state:
+    st.session_state.hasil = None
+
+# ======================
 # INPUT
 # ======================
 st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -74,41 +75,40 @@ nama_dosen = st.selectbox("Dosen", list(dosen_mk.keys()))
 mk = st.selectbox("Mata Kuliah", dosen_mk[nama_dosen])
 preferensi_jam = st.text_input("Preferensi Jam (contoh: 09.00)")
 
-generate = st.button("Generate Rekomendasi")
+if st.button("Generate Rekomendasi"):
+    if preferensi_jam.strip() == "":
+        st.warning("Masukkan jam terlebih dahulu")
+    else:
+        st.session_state.hasil = rekomendasi_jadwal(nama_dosen, preferensi_jam)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================
 # OUTPUT
 # ======================
-if generate:
+if st.session_state.hasil is not None:
 
-    if preferensi_jam.strip() == "":
-        st.warning("Masukkan jam terlebih dahulu")
-    else:
-        hasil = rekomendasi_jadwal(nama_dosen, preferensi_jam)
+    df = pd.DataFrame(st.session_state.hasil)
+    df["Score"] = df["Score"].round(2)
 
-        df = pd.DataFrame(hasil)
-        df["Score"] = df["Score"].round(2)
+    # TOP
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Rekomendasi Utama")
+    st.dataframe(df.head(5), use_container_width=True, hide_index=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        # TOP
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Rekomendasi Utama")
-        st.dataframe(df.head(5), use_container_width=True, hide_index=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+    # ALT
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Alternatif Jadwal")
+    st.dataframe(df.iloc[5:], use_container_width=True, hide_index=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        # ALT
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Alternatif Jadwal")
-        st.dataframe(df.iloc[5:], use_container_width=True, hide_index=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+    # DOWNLOAD
+    csv = df.to_csv(index=False)
 
-        # DOWNLOAD
-        csv = df.to_csv(index=False)
-
-        st.download_button(
-            "Download Hasil",
-            csv,
-            "rekomendasi_jadwal.csv",
-            "text/csv"
-        )
+    st.download_button(
+        "Download Hasil",
+        csv,
+        "rekomendasi_jadwal.csv",
+        "text/csv"
+    )
